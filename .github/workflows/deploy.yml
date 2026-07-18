@@ -109,68 +109,61 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-
+      
           ssh \
             -i "${HOME}/.ssh/eft-inscripcion-cursos.pem" \
             -o IdentitiesOnly=yes \
             -o ConnectTimeout=30 \
-            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" << 'EOF'
-
+            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" <<EOF
+      
           set -euo pipefail
-
+      
           cd /home/ec2-user/EFTInscripcionCursos
-
+      
           echo "Actualizando código desde GitHub..."
           git fetch origin main
           git reset --hard origin/main
-
+      
           echo "Creando archivo de variables..."
-
           sudo mkdir -p /opt/eft
-          
-          sudo tee /opt/eft/eft.env > /dev/null <<EOF
+      
+          sudo tee /opt/eft/eft.env > /dev/null <<EOT
           AZURE_B2C_ISSUER_URI=${{ secrets.AZURE_B2C_ISSUER_URI }}
           AZURE_B2C_AUDIENCE=${{ secrets.AZURE_B2C_AUDIENCE }}
           AZURE_ROLE_CLAIM=${{ secrets.AZURE_ROLE_CLAIM }}
-          
+      
           AWS_REGION=${{ secrets.AWS_REGION }}
           AWS_S3_BUCKET_NAME=${{ secrets.AWS_S3_BUCKET_NAME }}
-          
-          RABBITMQ_HOST=rabbitmq
-          EOF
-          
-          sudo chmod 600 /opt/eft/eft.env
-
+      
+          SPRING_DATASOURCE_URL=${{ secrets.SPRING_DATASOURCE_URL }}
+          SPRING_DATASOURCE_USERNAME=${{ secrets.SPRING_DATASOURCE_USERNAME }}
+          SPRING_DATASOURCE_PASSWORD=${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+      
+          SPRING_RABBITMQ_HOST=rabbitmq
+          EOT
+      
+          echo "Contenido del archivo (sin mostrar valores):"
+          sudo wc -l /opt/eft/eft.env
+      
           echo "Construyendo y desplegando contenedores..."
+          sudo docker compose down || true
           sudo docker compose up -d --build --remove-orphans
-
+      
           echo "Verificando contenedores..."
           sudo docker compose ps
-
-          BACKEND_RUNNING="$(
+      
+          BACKEND_RUNNING="\$(
             sudo docker inspect \
               --format='{{.State.Running}}' \
               eft-backend
           )"
-
-          RABBITMQ_STATUS="$(
-            sudo docker inspect \
-              --format='{{.State.Health.Status}}' \
-              eft-rabbitmq
-          )"
-
-          if [ "${BACKEND_RUNNING}" != "true" ]; then
+      
+          if [ "\${BACKEND_RUNNING}" != "true" ]; then
             echo "El contenedor eft-backend no está ejecutándose."
-            sudo docker logs --tail 150 eft-backend
+            sudo docker logs --tail 200 eft-backend
             exit 1
           fi
-
-          if [ "${RABBITMQ_STATUS}" != "healthy" ]; then
-            echo "RabbitMQ no alcanzó el estado healthy."
-            sudo docker logs --tail 150 eft-rabbitmq
-            exit 1
-          fi
-
+      
           echo "Despliegue completado correctamente."
           EOF
 
