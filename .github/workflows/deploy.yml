@@ -124,6 +124,23 @@ jobs:
           git fetch origin main
           git reset --hard origin/main
 
+          echo "Creando archivo de variables..."
+
+          sudo mkdir -p /opt/eft
+          
+          sudo tee /opt/eft/eft.env > /dev/null <<EOF
+          AZURE_B2C_ISSUER_URI=${{ secrets.AZURE_B2C_ISSUER_URI }}
+          AZURE_B2C_AUDIENCE=${{ secrets.AZURE_B2C_AUDIENCE }}
+          AZURE_ROLE_CLAIM=${{ secrets.AZURE_ROLE_CLAIM }}
+          
+          AWS_REGION=${{ secrets.AWS_REGION }}
+          AWS_S3_BUCKET_NAME=${{ secrets.AWS_S3_BUCKET_NAME }}
+          
+          RABBITMQ_HOST=rabbitmq
+          EOF
+          
+          sudo chmod 600 /opt/eft/eft.env
+
           echo "Construyendo y desplegando contenedores..."
           sudo docker compose up -d --build --remove-orphans
 
