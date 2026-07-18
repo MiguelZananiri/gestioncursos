@@ -41,10 +41,10 @@ jobs:
         shell: bash
         env:
           AZURE_B2C_ISSUER_URI: >-
-            https://panchovillarzucloudnative.b2clogin.com/tfp/34d885aa-360d-4347-ba69-3990da36207a/b2c_1_inscripcioncursossignupsignin/v2.0/
-          AZURE_B2C_AUDIENCE: b013b9bc-2fa8-4085-8648-6994a83a3de6
+            https://miguelcloud.b2clogin.com/tfp/698c0ebe-04d8-400f-a7a3-853f95a21a9e/b2c_1_app-cloud-test-usuario1/v2.0/
+          AZURE_B2C_AUDIENCE: 167041bb-7264-477f-bf70-1b44199cf2bc
           AZURE_ROLE_CLAIM: extension_consultaRole
-          AWS_S3_BUCKET_NAME: eft-inscripcion-cursos
+          AWS_S3_BUCKET_NAME: mi-bucket-s8
           AWS_REGION: ${{ secrets.AWS_REGION }}
         run: |
           chmod +x mvnw
